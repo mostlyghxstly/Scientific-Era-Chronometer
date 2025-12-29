@@ -1,3 +1,4 @@
+![SE Chronometer Logo](seclockgemini.png)
 # The Scientific Era Chronometer (v1.0)
 **Human Progress > Religious Tradition**
 

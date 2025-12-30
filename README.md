@@ -11,8 +11,6 @@ The **SE Chronometer** is a high-precision timekeeping instrument that rejects a
 * **The Noon Epoch:** Unlike the Gregorian calendar, which flips days at the arbitrary hour of midnight, the SE Chronometer increments the day at **Solar Noon**—the exact moment the Sun reaches its highest point in your specific sky.
 * **True Solar Time:** Uses the **Equation of Time** to calculate time based on Earth's elliptical orbit and axial tilt.
 
-
-
 ---
 
 ## ✨ Key Features (v1.3.4)
@@ -47,17 +45,12 @@ If you move or want to re-calibrate:
 
 ---
 
-## 🛠 Technical Deep-Dive
+## 🛠 Technical Evolution
 
-### **The Evolution: What's new in v1.3.4?**
-While v1.3.0 introduced the concept, **v1.3.4** perfects the execution:
+### **What's new in v1.3.4?**
 * **Solar Noon Day-Flip:** Officially decoupled from midnight. The day count increments at **12:00:00 True Solar Time**.
 * **Permission Hardening:** Fixed a Windows bug where the app crashed on double-click. It now uses **Absolute Pathing** to ensure settings are saved safely regardless of launch method.
 * **Lunar Phase Integration:** High-precision tracking relative to the J2000 epoch.
-
-### **Requirements**
-* **Python 3.x**
-* Libraries: `pytz`, `timezonefinder` (Auto-installed on first run).
 
 ---
 

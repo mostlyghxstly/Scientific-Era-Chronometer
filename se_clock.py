@@ -1,9 +1,10 @@
 import subprocess
 import sys
 import os
+import json
 
-# --- AUTO-INSTALLER LOGIC ---
-def install_dependencies():
+# --- AUTO-INSTALLER & CONFIG LOGIC ---
+def setup_environment():
     required = {'timezonefinder', 'pytz'}
     try:
         import timezonefinder
@@ -11,10 +12,29 @@ def install_dependencies():
     except ImportError:
         print("Calibrating Scientific Libraries... Please wait.")
         subprocess.check_call([sys.executable, "-m", "pip", "install", *required])
-        print("Calibration complete. Launching Chronometer...")
+        print("Calibration complete. Restarting...")
         os.execl(sys.executable, sys.executable, *sys.argv)
 
-install_dependencies()
+def load_or_create_config():
+    config_file = "se_config.json"
+    if os.path.exists(config_file):
+        with open(config_file, 'r') as f:
+            return json.load(f)
+    else:
+        print("--- SE Chronometer Initial Calibration ---")
+        try:
+            lat = float(input("Enter Latitude (e.g., 40.0192): "))
+            lng = float(input("Enter Longitude (e.g., -82.8782): "))
+            config = {"lat": lat, "lng": lng}
+            with open(config_file, 'w') as f:
+                json.dump(config, f)
+            return config
+        except ValueError:
+            print("Invalid input. Using default (Gahanna, OH).")
+            return {"lat": 40.0192, "lng": -82.8782}
+
+setup_environment()
+config = load_or_create_config()
 
 import tkinter as tk
 import math
@@ -23,14 +43,8 @@ from datetime import timezone
 import pytz
 from timezonefinder import TimezoneFinder
 
-# --- INITIAL SETUP: USER INPUT ---
-print("--- SE Chronometer Calibration ---")
-try:
-    USER_LAT = float(input("Enter Latitude (e.g., 40.0192): "))
-    USER_LNG = float(input("Enter Longitude (e.g., -82.8782): "))
-except ValueError:
-    print("Invalid input. Defaulting to Gahanna, OH.")
-    USER_LAT, USER_LNG = 40.0192, -82.8782
+USER_LAT = config["lat"]
+USER_LNG = config["lng"]
 
 tf = TimezoneFinder()
 LOCAL_TZ_NAME = tf.timezone_at(lng=USER_LNG, lat=USER_LAT) or "UTC"
@@ -40,12 +54,12 @@ def get_solar_data():
     now_utc = datetime.datetime.now(datetime.timezone.utc)
     day_of_year = now_utc.timetuple().tm_yday
     
-    # Equation of Time (EoT) - Correction for Earth's axial tilt/orbit
+    # Equation of Time (EoT) calculation
     B = (360 / 365) * (day_of_year - 81)
     B_rad = math.radians(B)
     eot = 9.87 * math.sin(2 * B_rad) - 7.53 * math.cos(B_rad) - 1.5 * math.sin(B_rad)
     
-    # Solar Time calculation based on Longitude
+    # Solar Time Calculation
     offset_minutes = (USER_LNG * 4) + eot
     total_minutes_utc = (now_utc.hour * 60) + now_utc.minute + (now_utc.second / 60)
     solar_minutes = (total_minutes_utc + offset_minutes) % 1440
@@ -53,10 +67,6 @@ def get_solar_data():
     return solar_minutes
 
 def calculate_se_date(solar_minutes):
-    """
-    Year 0 SE = 1543. 
-    New Day officially begins at Solar Noon (720 minutes).
-    """
     now = datetime.datetime.now(LOCAL_TZ)
     se_start_year = 1543
     se_new_year_date = datetime.datetime(now.year, 5, 24, tzinfo=LOCAL_TZ)
@@ -70,7 +80,7 @@ def calculate_se_date(solar_minutes):
 
     days_passed = (now - reference_date).days + 1
     
-    # SOLAR NOON FLIP: If before 12:00 PM True Solar Time, stay on previous day count.
+    # DAY FLIP AT SOLAR NOON (720 minutes)
     if solar_minutes < 720:
         display_day = days_passed - 1
     else:
@@ -92,18 +102,18 @@ def update_clock():
 
 # --- GUI ---
 root = tk.Tk()
-root.title("SE Chronometer v1.2")
+root.title("SE Chronometer v1.3")
 root.geometry("400x250")
-root.configure(bg="#050505")
+root.configure(bg="#000000")
 
-tk.Label(root, text="TRUE SOLAR TIME", bg="#050505", fg="#00ffcc", font=("Courier", 10)).pack(pady=(20,0))
-lbl_time = tk.Label(root, text="", bg="#050505", fg="#00ffcc", font=("Courier", 45, "bold"))
+tk.Label(root, text="TRUE SOLAR TIME", bg="#000000", fg="#00ffcc", font=("Courier", 10)).pack(pady=(20,0))
+lbl_time = tk.Label(root, text="", bg="#000000", fg="#00ffcc", font=("Courier", 45, "bold"))
 lbl_time.pack()
 
-lbl_date = tk.Label(root, text="", bg="#050505", fg="#ffffff", font=("Arial", 16, "bold"))
+lbl_date = tk.Label(root, text="", bg="#000000", fg="#ffffff", font=("Arial", 16, "bold"))
 lbl_date.pack(pady=10)
 
-tk.Label(root, text=f"SOLAR DAY START: NOON", bg="#050505", fg="#444444", font=("Arial", 8)).pack(side="bottom", pady=10)
+tk.Label(root, text=f"LOCATION LOCKED: {USER_LAT}, {USER_LNG}", bg="#000000", fg="#333333", font=("Arial", 7)).pack(side="bottom", pady=10)
 
 update_clock()
 root.mainloop()

@@ -21,3 +21,5 @@ The Scientific Era (SE) Chronometer is a desktop application designed to strip a
 1. Install Python 3.x.
 2. Download `se_clock.py`.
 3. Run `python se_clock.py` in your terminal.
+
+V1.2 now features Self-Installing Dependencies and Solar-Noon Day Tracking.
